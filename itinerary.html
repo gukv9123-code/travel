@@ -58,6 +58,7 @@
     .eyebrow { margin: 0 0 8px; color: #EDEBFA; font-size: 9px; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; }
     .hero h1 { max-width: 760px; margin: 0; font-size: clamp(26px, 5vw, 48px); line-height: 1.08; }
     .hero-copy { max-width: 740px; margin: 13px 0 0; color: rgba(255,255,255,.76); font-size: 12px; line-height: 1.7; }
+    .updated-badge { display: inline-block; margin-top: 11px; padding: 4px 11px; border-radius: 999px; background: rgba(255,255,255,.16); color: rgba(255,255,255,.92); font-size: 8.5px; font-weight: 750; }
     .hero-facts { margin-top: 22px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
     .hero-fact { min-width: 0; padding: 11px 12px; border: 1px solid rgba(255,255,255,.16); border-radius: 13px; background: rgba(255,255,255,.08); }
     .hero-fact span { display: block; color: rgba(255,255,255,.63); font-size: 8px; }
@@ -200,7 +201,7 @@
     }
     .stamp-banner .stamp-ico { font-size: 17px; flex: 0 0 auto; }
     @media print {
-      .topbar, .quick-nav { display: none; }
+      .topbar, .quick-nav, .updated-badge { display: none; }
       body { background: #fff; }
       main { width: 100%; padding: 0; }
       .hero { box-shadow: none; break-inside: avoid; }
@@ -220,6 +221,7 @@
       <p class="eyebrow">Complete family travel guide</p>
       <h1 id="heroTitle"></h1>
       <p class="hero-copy" id="heroCopy"></p>
+      <p class="updated-badge">🔄 最后更新：2026-08-17 17:12</p>
       <div class="hero-facts" id="heroFacts"></div>
     </section>
     <nav class="quick-nav" id="quickNav" aria-label="跳转到每天"></nav>
