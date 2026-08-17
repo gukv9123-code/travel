@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#6D5FC7">
+  <title>十一海岛行 · 马来西亚（亚庇·仙本那·槟城） · 路线地图</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root {
+      --ink: #3A3560;
+      --muted: #7B78A3;
+      --green: #7C6FD6;
+      --paper: #F5F3FC;
+      --line: #E2DEF3;
+      --white: #fff;
+      --shadow: 0 14px 42px rgba(22, 45, 36, .14);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    .topbar {
+      height: 68px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      background: linear-gradient(115deg, #6D5FC7, #8B7CF6 55%, #67B488);
+    }
+    .brand {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 14px;
+      background: rgba(255,255,255,.08);
+      font-size: 22px;
+    }
+    .title-wrap { min-width: 0; }
+    .title-wrap h1 { margin: 0; overflow: hidden; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
+    .title-wrap p { margin: 4px 0 0; color: rgba(255,255,255,.72); font-size: 10px; }
+    .guide-link {
+      min-height: 40px;
+      margin-left: auto;
+      padding: 0 13px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 12px;
+      color: #fff;
+      background: rgba(255,255,255,.09);
+      font-size: 11px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .app { height: calc(100% - 68px); display: grid; grid-template-columns: minmax(370px, 430px) 1fr; }
+    .panel { min-width: 0; overflow-y: auto; border-right: 1px solid var(--line); background: var(--paper); }
+    .intro { padding: 20px 20px 14px; }
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--green);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    .intro h2 { margin: 0; font-size: 21px; line-height: 1.25; }
+    .intro-copy { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.65; }
+    .facts { margin-top: 13px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .fact { min-width: 0; padding: 10px 11px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.72); }
+    .fact span { display: block; color: var(--muted); font-size: 9px; }
+    .fact strong { display: block; margin-top: 4px; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .day-nav {
+      position: sticky;
+      z-index: 20;
+      top: 0;
+      padding: 10px 16px;
+      display: flex;
+      gap: 7px;
+      overflow-x: auto;
+      border-block: 1px solid var(--line);
+      background: rgba(245,242,233,.94);
+      backdrop-filter: blur(12px);
+      scrollbar-width: none;
+    }
+    .day-nav::-webkit-scrollbar { display: none; }
+    .day-button {
+      min-width: 48px;
+      min-height: 38px;
+      padding: 0 12px;
+      flex: 0 0 auto;
+      border: 1px solid #D9D4F2;
+      border-radius: 11px;
+      color: #5F5B8C;
+      background: #fff;
+      font: inherit;
+      font-size: 10px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+    .day-button.active { color: #fff; border-color: var(--green); background: var(--green); }
+    #detail { padding: 16px 20px 28px; }
+    .heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .heading h3 { margin: 0; font-size: 18px; line-height: 1.3; }
+    .day-code { min-width: 44px; height: 44px; display: grid; place-items: center; border-radius: 13px; color: #fff; font-size: 11px; font-weight: 900; }
+    .summary { margin: 9px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .metric-grid { margin-top: 13px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .metric { padding: 10px 11px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+    .metric span { display: block; color: var(--muted); font-size: 9px; }
+    .metric strong { display: block; margin-top: 4px; font-size: 11px; line-height: 1.4; }
+    .section-label { margin: 17px 0 8px; color: #5B5690; font-size: 10px; font-weight: 900; }
+    .timeline { display: grid; gap: 7px; }
+    .stop {
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 29px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      cursor: pointer;
+    }
+    .stop-num { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 9px; color: #fff; font-size: 9px; font-weight: 900; }
+    .stop-name { min-width: 0; }
+    .stop-name strong, .stop-name span { display: block; }
+    .stop-name strong { font-size: 11px; }
+    .stop-name span { margin-top: 2px; overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+    .stop-flags { display: flex; gap: 4px; font-size: 14px; }
+    .booking, .risk {
+      margin-top: 12px;
+      padding: 11px 12px;
+      border: 1px solid #C9E8D2;
+      border-radius: 12px;
+      color: #3F7A57;
+      background: #EFFAF2;
+      font-size: 10px;
+      line-height: 1.55;
+    }
+    .risk { border-color: #DCD6F5; color: #4A4580; background: #F0EDFB; }
+    .map-wrap { position: relative; min-width: 0; background: #E4E0F6; }
+    #map { width: 100%; height: 100%; }
+    .map-tools { position: absolute; z-index: 500; top: 14px; right: 14px; display: flex; gap: 7px; }
+    .map-tools button {
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid rgba(24,51,42,.14);
+      border-radius: 11px;
+      color: var(--ink);
+      background: rgba(255,255,255,.94);
+      box-shadow: 0 8px 22px rgba(24,51,42,.13);
+      font: inherit;
+      font-size: 10px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+    .legend {
+      position: absolute;
+      z-index: 500;
+      right: 14px;
+      bottom: 24px;
+      padding: 10px 12px;
+      border: 1px solid rgba(24,51,42,.14);
+      border-radius: 12px;
+      color: #5F5B8C;
+      background: rgba(255,255,255,.92);
+      box-shadow: var(--shadow);
+      font-size: 9px;
+      line-height: 1.6;
+      backdrop-filter: blur(10px);
+    }
+    .legend div + div { margin-top: 3px; }
+    .route-pin {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border: 3px solid #fff;
+      border-radius: 50% 50% 50% 12%;
+      color: #fff;
+      transform: rotate(-45deg);
+      box-shadow: 0 5px 13px rgba(18,35,28,.28);
+      font-size: 9px;
+      font-weight: 900;
+    }
+    .route-pin span { transform: rotate(45deg); }
+    .emoji-pin {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border: 3px solid #fff;
+      border-radius: 14px;
+      background: rgba(255,255,255,.97);
+      box-shadow: 0 5px 15px rgba(18,35,28,.28), 0 0 0 3px var(--marker);
+      font-size: 20px;
+    }
+    .order, .ticket {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 2px 7px rgba(18,35,28,.22);
+    }
+    .order { top: -8px; left: -8px; width: 18px; height: 18px; color: #fff; background: var(--marker); font-size: 8px; font-weight: 900; }
+    .ticket { right: -9px; bottom: -8px; width: 21px; height: 21px; background: #EAF7EE; font-size: 11px; font-style: normal; }
+    .day-label { width: max-content; padding: 4px 7px; border: 2px solid #fff; border-radius: 7px; color: #fff; box-shadow: 0 2px 8px rgba(20,38,30,.2); font-size: 8px; font-weight: 900; transform: translate(-50%,-50%); }
+    .leaflet-container { font: inherit; }
+    .leaflet-popup-content-wrapper { border-radius: 14px; }
+    .popup-day { color: var(--green); font-size: 9px; font-weight: 900; }
+    .popup-name { margin-top: 4px; font-size: 13px; font-weight: 900; }
+    .popup-en { margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .popup-note { margin-top: 7px; color: #625E8E; font-size: 9px; line-height: 1.5; }
+    .popup-booking { margin-top: 7px; padding: 6px 8px; border-radius: 8px; color: #3F7A57; background: #EAF7EE; font-size: 9px; font-weight: 750; line-height: 1.45; }
+    .popup-stamp { margin-top: 7px; padding: 6px 8px; border: 1.5px dashed #D9A53C; border-radius: 8px; color: #7A5610; background: #FFF8E8; font-size: 9px; font-weight: 800; line-height: 1.45; }
+    .popup-link { display: inline-block; margin-top: 8px; color: var(--green); font-size: 9px; font-weight: 800; text-decoration: none; }
+    @media (max-width: 820px) {
+      html, body { height: auto; min-height: 100%; }
+      body { overflow-x: hidden; }
+      .topbar { height: 60px; padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right)); }
+      .brand { width: 38px; height: 38px; border-radius: 12px; font-size: 19px; }
+      .title-wrap h1 { font-size: 15px; }
+      .title-wrap p { font-size: 8px; }
+      .guide-link { padding-inline: 10px; }
+      .app { height: auto; display: flex; flex-direction: column; }
+      .map-wrap { order: 1; height: 45svh; min-height: 330px; max-height: 430px; }
+      .panel { order: 2; width: 100%; overflow: visible; border: 0; }
+      .intro { padding: 17px 14px 12px; }
+      .day-nav { padding-inline: 14px; }
+      #detail { padding: 15px 14px max(28px, env(safe-area-inset-bottom)); }
+      .legend { display: none; }
+    }
+    @media (max-width: 430px) {
+      .intro h2 { font-size: 19px; }
+      .facts, .metric-grid { grid-template-columns: 1fr 1fr; }
+      .map-tools { top: 10px; right: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand" aria-hidden="true">🧭</div>
+    <div class="title-wrap">
+      <h1 id="topTitle"></h1>
+      <p id="topSubtitle"></p>
+    </div>
+    <a class="guide-link" href="./itinerary.html">完整攻略 →</a>
+  </header>
+  <main class="app">
+    <aside class="panel">
+      <section class="intro">
+        <p class="eyebrow">Constraint-aware travel plan</p>
+        <h2 id="heroTitle"></h2>
+        <p class="intro-copy" id="heroCopy"></p>
+        <div class="facts" id="facts"></div>
+      </section>
+      <nav class="day-nav" id="dayNav" aria-label="按天查看"></nav>
+      <section id="detail" aria-live="polite"></section>
+    </aside>
+    <section class="map-wrap" aria-label="旅行路线地图">
+      <div id="map"></div>
+      <div class="map-tools">
+        <button id="overviewButton" type="button">全部路线</button>
+        <button id="fitButton" type="button">适合视图</button>
+      </div>
+      <div class="legend">
+        <div>🎟️ 需提前预订 / 确认</div>
+        <div>🦘 特色景观 / 亲子地标</div>
+        <div>○ 普通停靠点 · 彩色线为每日路线</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const trip = {"title":"十一海岛行 · 马来西亚（亚庇·仙本那·槟城）","subtitle":"4 Girls · Kota Kinabalu → Semporna → Penang","language":"zh-CN","travelWindow":"2026-09-24 — 2026-10-05","travelers":"4 位女生（成人）","pace":"轻松 Relaxed","arrival":"9月24日 15:25 上海浦东 → 吉隆坡（马航）","departure":"10月5日 13:00 槟城 → 香港 → 上海浦东 22:10（国泰）","fixedWindows":["9.25 周五晚 加雅街夜市（仅周五-周日开放）","9.26 环滩岛：07:00 集合 / 08:00 开船 / 约 14:30 返程","9.27 Kawa 红树林团约 12:45 酒店接送，约 22:00 返回","9.28 桨板 16:30 酒店集合（Marine Star，RM140/人）","10.1 马达京游艇 08:00 海角壹号集合 / 08:30 签到截止"],"totalDistanceKm":10364,"days":[{"id":"D1","date":"9月24日 · 周四","title":"上海 → 吉隆坡 · 机场过夜","theme":"飞行日","color":"#6D5FC7","summary":"傍晚航班飞吉隆坡，入住机场旁酒店恢复体力，为次日转机亚庇做准备。","distanceKm":3792,"travelTime":"约 6 小时（飞行 + 转场）","stay":"雪邦机场假日酒店 Holiday Inn Sepang","napPlan":"抵达后尽快休息，次日需早起转机","risk":"若航班延误，提前与酒店确认夜间接机；酒店不含早餐，次日一早可在便利店或机场解决；第一程 08:05 起飞，预留充足时间。","stops":[{"name":"上海浦东国际机场","en":"Shanghai Pudong Intl Airport (PVG)","lat":31.1427,"lng":121.8041,"emoji":"✈️","highlight":true,"distanceFromPreviousKm":0,"note":"15:25 马来西亚航空 MH 飞吉隆坡，21:00 抵达。"},{"name":"吉隆坡国际机场","en":"Kuala Lumpur Intl Airport (KLIA)","lat":2.7431,"lng":101.7064,"distanceFromPreviousKm":3780,"travelFromPrevious":"✈️ 约 5 小时 35 分","note":"入境后前往机场附近酒店。","noteLines":[{"text":"入境后前往机场附近酒店","tone":"info"}],"stamp":"入境马来西亚 · 盖西马入境章，核对日期"},{"name":"雪邦机场假日酒店","en":"Holiday Inn Sepang - KLIA","lat":2.8203,"lng":101.6956,"distanceFromPreviousKm":12,"travelFromPrevious":"🚗 约 15-20 分钟（KLIA→酒店，约 9-13 km）","note":"已预订（离店扣费）。Family Room = 1.5m 大床 + 0.8m 上下铺；酒店确认 4 位成人同住不加费（官方限 2大2小、无加床服务）；押金 RM100/房/晚；不含早餐。","noteLines":[{"text":"已预订（离店扣费）","tone":"info"},{"text":"房型：Family Room = 1 张 1.5m 大床 + 1 张 0.8m 上下铺（官方限 2 成人+2 儿童，上下铺偏窄）","tone":"info"},{"text":"✅ 酒店已回复：4 位成人可按当前预订同住、不加收费用（酒店无加床/加床垫服务）","tone":"ok"},{"text":"如觉得拥挤，可选改订 2 间 Standard Room（备选）","tone":"info"},{"text":"⚠️ 押金 RM100/房/晚，退房无消费即退还（已确认）","tone":"warn"},{"text":"不含早餐","tone":"warn"},{"text":"KLIA→酒店约 15-20 分钟（9-13km）；入境+取行李约 30-60 分钟，预计 22:00 前后到店","tone":"info"},{"text":"⚠️ 酒店班车约 6:00-21:00，落地 21:00 大概率赶不上末班，建议 Grab/打车（约 RM15-25）","tone":"warn"},{"text":"🏪 附近有 7-Eleven（24h）：Kota Warisan 的 Jalan Warisan Sentral 就有，KLIA 航站楼内也有 24h 店","tone":"info"}]}],"schedule":[{"time":"15:25-21:00","title":"上海→吉隆坡 / PVG→KLIA","note":"马航 MH，机上晚餐。"},{"time":"21:00-22:00","title":"入境 + 前往酒店 / Hotel Transfer","note":"入境+取行李约30-60分钟；酒店班车约21:00截止，超时打车约15-20分钟（RM15-25），预计22:00前后到店"},{"time":"22:00","title":"入住休息 / Check-in & Rest","note":"押金 MYR100 · 不含早餐 · 次日 05:45 坐酒店班车去机场"}],"food":[{"name":"机场 / 酒店周边","note":"抵达较晚：机场 7-Eleven 或酒店附近解决，酒店不含餐"}],"outfit":"舒适宽松长裤 + 薄外套（飞机冷气足）+ 平底鞋；颈枕/眼罩随手，到酒店即休息"},{"id":"D2","date":"9月25日 · 周五","title":"抵达亚庇 · 逛街 + 加雅街夜市","theme":"落地适应","color":"#4F9E70","summary":"早上 05:45 坐酒店班车去吉隆坡机场（约 06:10 到，重新托运），08:05 飞亚庇 10:45 到；下午按线路：曙光广场逛街 → 富源下午茶 → LaraSpa 按摩 → 加雅街夜市。","distanceKm":19,"travelTime":"约 30 分钟（机场→市区）","stay":"凯悦尚萃 Hyatt Centric","napPlan":"抵达后下午可短暂休息再出门","risk":"若错过 05:45 班车，改 Grab/打车（约 15-20 分钟，最晚 06:00 出发）；到亚庇若早到无法入住，先寄存行李；下雨时夜市改逛商场或餐厅。","stops":[{"name":"吉隆坡国际机场（出发）","en":"Kuala Lumpur Intl Airport (KLIA) - Departure","lat":2.7431,"lng":101.7064,"distanceFromPreviousKm":10,"travelFromPrevious":"🚗 酒店班车 05:45 出发，约 20 分钟到机场","note":"坐 05:45 酒店班车（另有 06:45 一班但偏赶），约 06:10 到机场；马航柜台重新托运 + 值机，08:05 起飞。"},{"name":"亚庇国际机场","en":"Kota Kinabalu Intl Airport (BKI)","lat":5.9245,"lng":116.0504,"distanceFromPreviousKm":1560,"travelFromPrevious":"✈️ 08:05-10:45 吉隆坡→亚庇","note":"马来西亚航空，10:45 抵达。","noteLines":[{"text":"马来西亚航空，10:45 抵达","tone":"info"}],"stamp":"入境东马沙巴 · 盖东马入境章，漏盖立即补"},{"name":"凯悦尚萃酒店","en":"Hyatt Centric Kota Kinabalu","lat":5.9851,"lng":116.0752,"emoji":"🏨","highlight":true,"distanceFromPreviousKm":8,"travelFromPrevious":"🚗 约 15-20 分钟","note":"已预订 3 晚（9.25-9.28，离店扣费）。房型 2 Twin Beds Hill View（2 张 1.2m 床）；酒店确认每间严格限住 3 人、4 人需订 2 间房；第 3 人加床免费；可能收押金约 RM100/晚。","noteLines":[{"text":"已预订 3 晚（9.25-9.28，离店扣费）","tone":"info"},{"text":"房型：2 Twin Beds Hill View（2 张 1.2m 床）","tone":"info"},{"text":"含 9.26-9.28 三份早餐（9.25 入住当天不含）","tone":"info"},{"text":"⚠️ 可能收取押金：约 RM100/晚（3 晚约 RM300，退房退还）","tone":"warn"},{"text":"⚠️ 酒店确认：每间严格限住 3 人，4 人即使加床也不能同住 → 需订第 2 间房","tone":"warn"},{"text":"第 3 人加床免费（约 90cm × 180-190cm，以到店房态为准）","tone":"info"},{"text":"提前入住不保证（标准 15:00），已登记到达时间；到店可寄存行李并使用设施","tone":"info"},{"text":"✅ 酒店已回复确认；第 2 间房待你决定是否加订","tone":"ok"}]},{"name":"曙光广场","en":"Suria Sabah","lat":5.9875,"lng":116.0771,"emoji":"🛍️","highlight":true,"distanceFromPreviousKm":1,"travelFromPrevious":"🚶 步行 5 分钟","note":"亚庇最大商场之一，逛街 + 下午茶；10:00 开门，空调足；雨天兜底首选。","noteLines":[{"text":"🛍️ Cotton On（1-2F）：度假风衣服/比基尼/卡通联名，价格≈H&M 常打折","tone":"info"},{"text":"🩴 Fipper 人字拖：本土品牌鞋底软、便宜","tone":"info"},{"text":"🎁 Bataras 超市：买榴莲干等沙巴手信","tone":"info"},{"text":"🛁 Bath & Body Works 香氛身体乳 · 优衣库/Coach/星巴克/门口霸王茶姬","tone":"info"},{"text":"💆 LaraSpa（加雅街对面，步行约 10 分钟）：精油 90 分钟约 ¥208/人，4 人分 2 间房或 3 人+1 窄床；⚠️ 建议提前一周微信预约","tone":"info"}]},{"name":"加雅街夜市","en":"Gaya Street Night Market","lat":5.9835,"lng":116.077,"emoji":"🌮","highlight":true,"distanceFromPreviousKm":1,"travelFromPrevious":"🚶 步行 10 分钟","note":"周五-周日晚上开放，今天正好是周五！小吃、手信、街头表演。"}],"schedule":[{"time":"05:15-05:45","title":"起床退房 / Wake up & Check out","note":"不含早餐，可在 7-Eleven 或机场解决；押金 MYR100 退房时退回"},{"time":"05:45-06:10","title":"酒店 → KLIA（二选一）","note":"走法A：酒店班车 05:45（另有 06:45 一班，到机场偏赶）｜走法B：Grab/打车约 15-20 分钟，最晚 06:00 出发（约 06:20 到），费用约 RM15-25"},{"time":"06:10-07:45","title":"值机 + 重新托运 / Check-in & Bag Drop","note":"马航国内段柜台重新托运，06:10 到很从容"},{"time":"08:05-10:45","title":"吉隆坡→亚庇 / KLIA→BKI","note":"马航，机上早餐。"},{"time":"11:15-12:00","title":"前往酒店 / Hotel Transfer","note":"Grab 约 RM15-20。"},{"time":"下午（弹性）","title":"去 DBKK 码头预订红树林 + 跳岛（Grab）","note":"跳岛在 MK 9 号窗口；环滩岛约 RM140-150/人、Kawa 红树林约 RM80/人；码头就在曙光广场正后方，可先订票再逛街"},{"time":"下午（弹性）","title":"曙光广场逛街 + 富源茶餐厅","note":"Cotton On、Fipper 人字拖、Bataras 手信；逛累了去富源喝拉茶/苹果汁、吃咖椰吐司，步行可达，时间随意不赶"},{"time":"16:30-18:30","title":"LaraSpa 精油按摩 / LaraSpa","note":"加雅街对面，中文沟通；精油按摩 90 分钟，约 ¥208/人；4 人分 2 间房或 3 人+1 窄床；⚠️ 建议提前一周微信预约"},{"time":"18:30-21:30","title":"加雅街夜市 晚餐 / Gaya Night Market","note":"沙爹、烧烤、热带水果，周五夜市最热闹"}],"food":[{"name":"富源茶餐厅","en":"Fook Yuen","note":"拉茶、咖椰吐司、苹果汁都好喝"},{"name":"加雅街夜市","en":"Gaya Street Night Market","note":"沙爹、烧烤、热带水果"}],"outfit":"轻便夏装即可，不需要化妆（赤道湿热易脱妆）；小白鞋/凉鞋，带小包"},{"id":"D3","date":"9月26日 · 周六","title":"环滩岛一日游 · 浮潜 + 日落","theme":"海岛日","color":"#7C6FD6","summary":"早上 07:00 从 DBKK 码头（曙光广场正后方）出发，船程约 1-1.25 小时到环滩岛：2 次浮潜 + 岛上自助午餐 + 自由活动，约 14:30 返程，傍晚回凯悦顶楼 SkyBar 看日落。","distanceKm":80,"travelTime":"船程约 1-1.25 小时","stay":"凯悦尚萃 Hyatt Centric","napPlan":"下午 15:00 后回酒店可小睡","risk":"跳岛船票提前 1-2 天在 DBKK 码头订好（国庆人多）；风浪大可能停航或改近岛，雨天改市区博物馆或商场","stops":[{"name":"DBKK 码头（曙光广场正后方）","en":"DBKK Jetty (behind Suria Sabah)","lat":5.9875,"lng":116.0771,"emoji":"⛵","highlight":true,"bookable":true,"bookingNote":"环滩岛一日游约 RM140-150/人（含船+2次浮潜+午餐），MK 9 号窗口购买；建议 D2 下午先去码头订好，07:00 集合","bookingUrl":"https://www.klook.com/zh-CN/search/?query=Mengalum%20Island","distanceFromPreviousKm":3,"travelFromPrevious":"🚗 凯悦/市区过去约 5-10 分钟","note":"环滩岛登船码头，曙光广场正后方；07:00 集合、约 08:00 开船。"},{"name":"环滩岛","en":"Pulau Mengalum","lat":6.1998,"lng":115.5962,"emoji":"🏝️","highlight":true,"distanceFromPreviousKm":57,"travelFromPrevious":"⛴️ 船程约 1-1.25 小时","note":"亚庇西北约 56km：2 次浮潜 + 岛上自助午餐 + 自由活动，约 14:30 返程；晕船药提前吃。📸 白沙滩/果冻海出片点，建议带防水相机或手机防水袋。"},{"name":"凯悦顶楼 SkyBar 日落","en":"Hyatt Centric Rooftop SkyBar","lat":5.9851,"lng":116.0752,"emoji":"🌅","highlight":true,"distanceFromPreviousKm":20,"travelFromPrevious":"⛴️ 返航回码头约 1 小时，再回酒店","note":"凯悦顶楼 SkyBar 看日落（日落约 18:20），出片机位很适合拍照；看完可去市区吃海鲜/逛夜市。","image":"images/hyatt-rooftop.jpg","imageAlt":"凯悦尚萃亚庇顶楼 SkyBar 日落景观（适合拍照）"}],"schedule":[{"time":"06:45-07:00","title":"酒店集合出发 / Meet & Depart","note":"Grab 到 DBKK 码头（曙光广场正后方），约 5-10 分钟"},{"time":"07:00-08:00","title":"码头集合登船 / Board at DBKK Jetty","note":"MK 9 号窗口已购票；08:00 开船"},{"time":"08:00-09:15","title":"船程 → 环滩岛 / Boat to Mengalum","note":"约 1-1.25 小时，晕船药提前吃"},{"time":"09:15-12:00","title":"浮潜 ×2 + 自由活动 / Snorkeling","note":"两次浮潜，穿水母衣/救生衣"},{"time":"12:00-13:30","title":"岛上自助午餐 + 沙滩 / Lunch & Beach","note":"含餐"},{"time":"13:30-14:30","title":"自由活动 / Free Time","note":"拍照、躺平"},{"time":"14:30-15:45","title":"返程 / Return","note":"船程约 1 小时回市区"},{"time":"16:00-17:00","title":"回酒店休整 / Rest","note":"换洗"},{"time":"17:30-19:00","title":"凯悦顶楼 SkyBar 看日落 / SkyBar Sunset","note":"日落约 18:20，SkyBar 点杯饮品看海景"},{"time":"19:00-20:30","title":"晚餐：食全食美 / 虾中虾","note":"看完日落去吃；两家都在 Jalan Lintas（市区东部，Grab 约 15-20 分钟）；食全食美营业至约 23:30，海鲜/椰子布丁推荐"}],"food":[{"name":"食全食美 / 虾中虾（二选一）","en":"Hill Top / Masakan Sedap","note":"SkyBar 看完日落去吃；Jalan Lintas 一带，Grab 约 15-20 分钟；食全食美营业至约 23:30"},{"name":"环滩岛午餐","note":"岛上自助午餐已含"}],"outfit":"泳衣打底 + 水母衣/防晒服 + 沙滩短裤 + 人字拖；防水手机袋、防晒帽、墨镜","notes":["💊 晕船药：船程约 1-1.25 小时，出发前半小时吃","🛍️ 防水袋：浮潜时放手机/证件/衣物","🧴 防晒：SPF50+ 勤补，穿水母衣/防晒服更省心"],"photos":["🏝️ 环滩岛：白沙滩 + 果冻海，沙滩/船上/浮潜都是出片点","🌅 凯悦顶楼 SkyBar：日落约 18:20，黄昏蓝调时刻的楼顶机位（附实拍图）"]},{"id":"D4","date":"9月27日 · 周日","title":"Kawa Kawa 红树林 + 萤火虫一日游","theme":"自然日","color":"#58A675","summary":"下午出发的红树林团：长鼻猴、海滩日落、夜游看萤火虫，约 22:00 回酒店，上午睡到自然醒。","distanceKm":160,"travelTime":"单程接驳约 1.5-2 小时","stay":"凯悦尚萃 Hyatt Centric","napPlan":"上午自然醒，团内返程车上可休息","risk":"雨天萤火虫活动照常但体验打折；若太累可取消本日改市区休闲（团费一般可退改）","stops":[{"name":"凯悦尚萃（集合点）","en":"Hyatt Centric KK (Pickup)","lat":5.9851,"lng":116.0752,"distanceFromPreviousKm":0,"note":"约 12:45 司机到酒店门口接送（具体以预订确认为准）。"},{"name":"Kawa Kawa 红树林码头","en":"Kawa Kawa River Cruise","lat":6.4154,"lng":116.4061,"emoji":"🌳","highlight":true,"bookable":true,"bookingNote":"约 RM80/人（可在 DBKK 码头 MK 窗口一并预订）；建议提前 1-2 天，含接送/船游/日落/萤火虫","bookingUrl":"https://piao.qunar.com/daytrip/detail_4288412.html","distanceFromPreviousKm":80,"travelFromPrevious":"🚗 约 2 小时","note":"约 16:00 抵达：红树林船游看长鼻猴、水牛与白鹭；约 18:00 团内含海边日落（日落约 18:20）。"},{"name":"Weston 红树林（可选）","en":"Weston Mangrove (Optional)","lat":5.2126,"lng":115.6058,"emoji":"🦋","highlight":false,"optional":true,"bookable":false,"bookingNote":"若报 KAWA+WESTON 双河道团才会前往（同一日游的加长版），单团不去","distanceFromPreviousKm":130,"travelFromPrevious":"🚗 约 2 小时（双河道团内接驳）","note":"另一处红树林与萤火虫观赏点，通常作为 KAWA 团的补充路线。","bookingUrl":""}],"schedule":[{"time":"上午","title":"自由休息 / Free Morning","note":"睡到自然醒，酒店泳池或海边散步。"},{"time":"12:45","title":"酒店接人 / Pickup","note":"提前 10 分钟在大堂等。"},{"time":"16:00-18:00","title":"红树林船游 / Mangrove Cruise","note":"看长鼻猴等野生动物。"},{"time":"18:00-19:00","title":"海边日落 / Sunset","note":"拍照时间。"},{"time":"19:00-20:00","title":"萤火虫夜游 / Fireflies","note":"天黑后乘船看萤火虫。"},{"time":"21:30-22:00","title":"返回酒店 / Return","note":"约 22:00 到市区。"}],"food":[{"name":"金沙园生肉面","en":"Kam Sia Yuen","note":"出发前吃亚庇特色生肉面"},{"name":"红树林团下午茶","note":"团内含当地下午茶，回程较晚晚餐可宵夜"}],"outfit":"轻便长裤或短裤（防蚊）+ 防蚊液 + 薄外套（晚上船上风大）+ 防滑运动鞋","notes":["💊 晕车药：往返车程各约 2 小时，上车前吃","🦟 驱虫/防蚊液：红树林与萤火虫时段蚊虫多，长裤 + 防蚊液"]},{"id":"D5","date":"9月28日 · 周一","title":"转住香格里拉 · 落日桨板","theme":"轻松日","color":"#8E7FE0","summary":"上午退房搬到香格里拉丹绒亚路，16:30 酒店集合穿浴袍去 Marine Star 玩落日桨板（RM140/人），海上追日落；玩桨板当天不去 Sunset Bar。","distanceKm":13,"travelTime":"约 30 分钟","stay":"香格里拉丹绒亚路 Shangri-La Tanjung Aru","napPlan":"下午 14:00-16:30 酒店休息","risk":"桨板受天气影响，若风浪大改看日落；提前确认当天可预订","stops":[{"name":"凯悦尚萃","en":"Hyatt Centric KK","lat":5.9851,"lng":116.0752,"distanceFromPreviousKm":0,"note":"上午退房，行李直接带到香格里拉。"},{"name":"香格里拉丹绒亚路度假酒店","en":"Shangri-La Tanjung Aru Resort","lat":5.9556,"lng":116.0421,"emoji":"🏝️","highlight":true,"distanceFromPreviousKm":12,"travelFromPrevious":"🚗 约 30 分钟","note":"已预订 2 晚（9.28-9.30，离店扣费）。丹绒池景大床房（1.81m 大床）；含 9.29-9.30 早餐（3 份）；亚洲十佳日落酒店之一。","noteLines":[{"text":"⚠️ 押金：金额已邮件咨询（reservations.tah@shangri-la.com，待酒店回复）","tone":"warn"},{"text":"🍳 含早餐：9.29、9.30 两个早晨（共 3 份）","tone":"info"}]},{"name":"丹绒亚路海滩·落日桨板","en":"Tanjung Aru SUP Sunset","lat":5.9527,"lng":116.0427,"emoji":"🏄‍♀️","highlight":true,"bookable":true,"bookingNote":"入住后去 Marine Star 预订：桨板约 RM140/人（16:30 大堂集合穿浴袍）+ 香蕉船 + 拖拽船（酒店自带）；带泳衣 + 防水袋","bookingUrl":"https://tw.trip.com/things-to-do/detail/101354632","distanceFromPreviousKm":1,"travelFromPrevious":"🚶 步行或接驳 5 分钟","note":"在浅水区划板追日落，出片率高；玩桨板当天就不去 Sunset Bar。到店后先预订。"}],"schedule":[{"time":"11:00","title":"凯悦退房 / Check out","note":"行李带到香格里拉"},{"time":"11:30-14:00","title":"入住香格里拉 / Check in","note":"到店后去 Marine Star 预订：桨板（RM140/人）+ 香蕉船 + 拖拽船（酒店自带水上项目）"},{"time":"14:00-16:00","title":"酒店休息 / Hotel Rest","note":"泳池或沙滩"},{"time":"16:30","title":"大堂集合（穿浴袍）→ 桨板 / Meet for SUP","note":"Marine Star（已预订），约 RM140/人；泳衣穿里面 + 防水袋"},{"time":"17:00-19:00","title":"落日桨板 SUP / Sunset SUP","note":"海上追日落；玩桨板当天不去 Sunset Bar"},{"time":"19:00-19:30","title":"回房换洗 / Freshen Up","note":""},{"time":"20:00","title":"晚餐 / Dinner","note":"香格里拉附近吃的少：酒店餐厅 / 丹绒亚路夜市 / 打车去市区 / 外卖"}],"food":[{"name":"⚠️ 香格里拉附近基本没餐厅","note":"晚餐需：① 酒店餐厅 ② 丹绒亚路夜市（海滩边）③ 打车去市区 ④ 外卖"}],"outfit":"海边正常穿搭，怎么舒服怎么玩：泳衣 + 防晒 + 人字拖；傍晚加件薄开衫看日落","notes":["🌅 Sunset Bar 已预订 17:00（9.28/9.29 两天都订了，看天气去）；玩桨板当天不去","🚤 入住后去 Marine Star 预订水上项目：桨板 + 香蕉船 + 拖拽船（酒店自带），价格以现场为准"]},{"id":"D6","date":"9月29日 · 周二","title":"香格里拉休闲日","theme":"恢复日","color":"#67B488","summary":"全天泡酒店：私人海滩、泳池、SPA，傍晚丹绒亚路海滩看日落，完全放松。","distanceKm":1,"travelTime":"无转场","stay":"香格里拉丹绒亚路 Shangri-La Tanjung Aru","napPlan":"自由安排午休","risk":"无聊时可选加：市区清真寺或菲律宾市场半日游（打车 15 分钟）","stops":[{"name":"香格里拉丹绒亚路度假酒店","en":"Shangri-La Tanjung Aru Resort","lat":5.9556,"lng":116.0421,"emoji":"🌺","highlight":true,"distanceFromPreviousKm":0,"note":"泳池、私人海滩、日落吧 Chill 一整天。"},{"name":"丹绒亚路海滩","en":"Tanjung Aru Beach","lat":5.9527,"lng":116.0427,"emoji":"🌇","highlight":true,"optional":true,"distanceFromPreviousKm":1,"travelFromPrevious":"🚶 步行 5-10 分钟","note":"傍晚看日落，附近有夜市小吃（烤串、椰浆饭）。"}],"schedule":[{"time":"上午","title":"睡到自然醒 / Slow Morning","note":"早餐到酒店餐厅"},{"time":"下午","title":"泳池 + 海滩 / Pool & Beach","note":"自由安排"},{"time":"17:00-18:30","title":"Sunset Bar 日落 / Sunset Bar","note":"已预订 17:00，看天气决定去不去；日落约 18:20"},{"time":"19:00","title":"晚餐 / Dinner","note":"香格里拉附近吃的少：酒店餐厅 / 丹绒亚路夜市 / 打车去市区 / 外卖"}],"food":[{"name":"⚠️ 香格里拉附近基本没餐厅","note":"晚餐需：酒店餐厅 / 丹绒亚路夜市 / 打车去市区 / 外卖"}],"outfit":"海边正常穿搭：泳衣 + 沙滩裙/罩衫 + 遮阳帽，防晒勤补，怎么舒服怎么玩","notes":["🌅 Sunset Bar 已预订 17:00（两天都订了，看天气去）；日落约 18:20"]},{"id":"D7","date":"9月30日 · 周三","title":"亚庇 → 仙本那 · 转场日","theme":"转场日","color":"#5E53B8","summary":"上午在香格里拉再享受半天，中午退房飞斗湖，坐车约 1.5 小时到仙本那憨豆民宿入住休息。","distanceKm":356,"travelTime":"约 3.5 小时（含飞行）","stay":"憨豆假日民宿 Mr Bean Holiday","napPlan":"下午 18:00 入住后可早休息，次日 08:00 出海","risk":"亚航为廉航，建议提前线上值机并确认行李额；到民宿较晚，晚餐提前在镇上解决或自带","stops":[{"name":"香格里拉丹绒亚路","en":"Shangri-La Tanjung Aru","lat":5.9556,"lng":116.0421,"distanceFromPreviousKm":0,"note":"12:00 退房，上午悠闲吃早餐。"},{"name":"亚庇国际机场","en":"Kota Kinabalu Intl Airport (BKI)","lat":5.9245,"lng":116.0504,"distanceFromPreviousKm":6,"travelFromPrevious":"🚗 约 15 分钟","note":"15:05 亚洲航空飞斗湖。"},{"name":"斗湖机场","en":"Tawau Airport (TWU)","lat":4.3138,"lng":118.1144,"distanceFromPreviousKm":270,"travelFromPrevious":"✈️ 15:05-15:55","note":"抵达后包车/Grab 前往仙本那（约 1.5 小时）。"},{"name":"憨豆假日民宿","en":"Mr Bean Holiday Semporna","lat":4.4572,"lng":118.5732,"emoji":"🛖","highlight":true,"distanceFromPreviousKm":80,"travelFromPrevious":"🚗 约 1.5 小时","note":"已预订 2 晚（9.30-10.2，已付款）。位置较偏但安静，免费接送镇上/码头，司机约 22:00 下班；每间限住 2 人。","noteLines":[{"text":"已预订 2 晚（9.30-10.2，已付款）","tone":"ok"},{"text":"🚐 免费接送镇上/码头（出海、买海鲜、去镇上都能用）","tone":"info"},{"text":"⚠️ 司机约 22:00 下班，晚归需自行打车","tone":"warn"},{"text":"⚠️ 每间限住 2 人（4 人需 2 间）","tone":"warn"}]}],"schedule":[{"time":"上午","title":"酒店休闲 / Morning at Shangri-La","note":"泳池/海滩。"},{"time":"12:00","title":"退房 / Check out","note":"前往机场。"},{"time":"15:05-15:55","title":"亚庇→斗湖 / BKI→TWU","note":"亚洲航空。"},{"time":"16:00-17:45","title":"斗湖→仙本那 / Road Transfer","note":"Grab/包车约 RM100-150。"},{"time":"18:00","title":"入住休息 / Check in","note":"镇上晚餐或民宿简单解决。"}],"food":[{"name":"憨豆民宿晚餐","note":"今晚直接在憨豆吃，不必再外出；早点休息，次日 08:00 出海"}],"outfit":"舒适即可（今天基本在路上），平底鞋 + 薄外套"},{"id":"D8","date":"10月1日 · 周四","title":"马达京游艇一日游 · 邦邦→汀巴汀巴→马达京","theme":"核心海岛日","color":"#469362","summary":"懒猫·马达京游艇（¥845/人，未预订）：08:00 海角壹号集合早茶，邦邦岛拍照（玻璃船/海上秋千）→ 汀巴汀巴第一次浮潜+滑梯+私家沙滩午餐 → 马达京第二次浮潜，约 16:30 回镇上买海鲜去懒猫加工。","distanceKm":90,"travelTime":"快艇/游艇接驳，整天出海","stay":"憨豆假日民宿 Mr Bean Holiday","napPlan":"回程快艇上可休息，回民宿后早休息","risk":"⚠️ 08:30 未签到视为 NOSHOW、订单全损，务必准时；风浪大时玻璃船/滑梯/秋千取消；晕船药提前吃","stops":[{"name":"憨豆假日民宿","en":"Mr Bean Holiday Semporna","lat":4.4572,"lng":118.5732,"distanceFromPreviousKm":0,"note":"约 07:30 出发前往海角壹号集合（自行抵达）。","noteLines":[{"text":"🚐 免费接送镇上/码头（出海、买海鲜都能用）","tone":"info"},{"text":"⚠️ 司机约 22:00 下班","tone":"warn"}]},{"name":"海角壹号海鲜餐厅（集合点）","en":"Hai Jiao Yi Hao (Meeting Point)","lat":4.4791,"lng":118.6119,"emoji":"⛵","highlight":true,"bookable":true,"bookingNote":"懒猫·马达京游艇：¥845/人，尚未预订（计划中）；08:00 集合含早茶，08:30 签到截止，未签到 NOSHOW 全损","bookingUrl":"https://www.lanmao.com","distanceFromPreviousKm":10,"travelFromPrevious":"🚗 班车约 20 分钟","note":"08:00 集合吃早茶，08:30 签到截止后出发。"},{"name":"邦邦岛","en":"Pom Pom Island","lat":4.583,"lng":118.883,"emoji":"📸","highlight":true,"distanceFromPreviousKm":30,"travelFromPrevious":"⛴️ 约 09:45 抵达","note":"玻璃船/海上秋千（浪大取消）、沙滩拍照；不想拍照可岛上休息游泳。"},{"name":"汀巴汀巴岛","en":"Timba-Timba Island","lat":4.5616,"lng":118.8466,"emoji":"🏝️","highlight":true,"distanceFromPreviousKm":12,"travelFromPrevious":"⛴️ 约 11:10 抵达","note":"第一次浮潜/体验潜水（约 30/15 分钟）+ 滑梯（浪大取消）；12:30 懒猫专属码头私家沙滩午餐，自由活动（沙滩椅/吊床/拖尾沙滩）。"},{"name":"马达京岛","en":"Pulau Mataking","lat":4.575,"lng":118.949,"emoji":"🐢","highlight":true,"distanceFromPreviousKm":12,"travelFromPrevious":"⛴️ 约 13:50 抵达","note":"第二次浮潜/深潜（约 30/15 分钟，视身体状况），海龟与珊瑚。"}],"schedule":[{"time":"07:30","title":"民宿出发 / Depart","note":"自行抵达海角壹号集合（可用民宿接送）"},{"time":"08:00","title":"海角壹号集合 · 早茶 / Meet & Breakfast","note":"含早茶；08:30 签到截止"},{"time":"08:30","title":"出发（途中深潜讲解） / Depart","note":"⚠️ 未签到 = NOSHOW 全损"},{"time":"09:45-10:30","title":"邦邦岛拍照 / Pom Pom","note":"玻璃船/海上秋千（浪大取消）、沙滩"},{"time":"11:10-12:30","title":"汀巴汀巴 · 第一次浮潜 + 滑梯 / Timba-Timba Snorkel","note":"浮潜约 30 分钟/深潜约 15 分钟；滑梯浪大取消"},{"time":"12:30-13:30","title":"汀巴汀巴私家沙滩午餐 / Beach Lunch","note":"懒猫专属码头；餐后自由活动（吊床/拖尾沙滩）"},{"time":"13:50-15:00","title":"马达京 · 第二次浮潜 / Mataking Snorkel","note":"海龟与珊瑚"},{"time":"15:00-16:30","title":"返程回仙本那 / Return","note":"约 16:30 到，买海鲜 → 懒猫加工"}],"food":[{"name":"船上/岛上含餐 + 懒猫加工","note":"午餐含；回镇上买海鲜（龙虾/皮皮虾/海胆）带去懒猫加工，人均 ¥100-150"}],"outfit":"泳衣打底 + 水母衣/防晒服 + 人字拖/沙滩鞋 + 防水袋 + 防晒帽墨镜（游艇线不登山）","notes":["⚠️ 08:00 海角壹号海鲜餐厅集合（自行抵达，含早茶）；08:30 签到截止，未签到 = NOSHOW 全损","🏊 套餐含浮潜装备；深潜/体验潜水按套餐另计，视身体状况","📸 邦邦岛玻璃船/海上秋千、汀巴汀巴拖尾沙滩都是出片点","📞 懒猫预订：¥845/人，尚未预订（计划中）"]},{"id":"D9","date":"10月2日 · 周五","title":"仙本那 → 槟城 · 长途转场","theme":"转场日","color":"#8576DC","summary":"一早离开仙本那，飞吉隆坡后转机槟城，20:35 抵达，入住乔治城馨乐庭。今天以赶路为主。","distanceKm":2100,"travelTime":"约 9 小时（两程飞行 + 中转）","stay":"柏淡馨乐庭连心酒店 Citadines Connect Bertam","napPlan":"吉隆坡中转 5.5 小时，可在机场休息","risk":"两程马航分开出票需重新托运，中转时间充裕（5.5h）但别离开航站楼太远；托运行李直达与否以航司确认为准","stops":[{"name":"憨豆假日民宿","en":"Mr Bean Holiday Semporna","lat":4.4572,"lng":118.5732,"distanceFromPreviousKm":0,"note":"约 07:30 出发（提前与民宿约车）。"},{"name":"斗湖机场","en":"Tawau Airport (TWU)","lat":4.3138,"lng":118.1144,"distanceFromPreviousKm":80,"travelFromPrevious":"🚗 约 1.5 小时","note":"11:00 马来西亚航空飞吉隆坡，建议 09:00 前到机场。","noteLines":[{"text":"11:00 马来西亚航空飞吉隆坡，建议 09:00 前到机场","tone":"info"}],"stamp":"离境东马 · 盖东马出境章，核对日期"},{"name":"吉隆坡国际机场","en":"Kuala Lumpur Intl Airport (KLIA)","lat":2.7431,"lng":101.7064,"distanceFromPreviousKm":1500,"travelFromPrevious":"✈️ 11:00-13:50","note":"中转约 5.5 小时：取行李重新托运，机场午餐/免税店。"},{"name":"槟城国际机场","en":"Penang Intl Airport (PEN)","lat":5.2967,"lng":100.2748,"distanceFromPreviousKm":500,"travelFromPrevious":"✈️ 19:30-20:35","note":"抵达后 Grab 前往酒店。"},{"name":"柏淡馨乐庭连心酒店","en":"Citadines Connect Bertam Georgetown","lat":5.4156,"lng":100.3291,"emoji":"🏨","highlight":true,"distanceFromPreviousKm":20,"travelFromPrevious":"🚗 约 30 分钟","note":"已预订 1 晚（10.2-10.3，离店扣费）。房型为 1 张 1.81m 大床 + 1 张 1.5m 大床（4 人可住）。押金确认邮件待发送。","noteLines":[{"text":"已预订 1 晚（10.2-10.3，离店扣费）","tone":"info"},{"text":"🛏️ 房型：1 张 1.81m 大床 + 1 张 1.5m 大床（4 人可住）","tone":"info"},{"text":"✅ 押金确认邮件已发送·待回复（frontoffice.ccbgp@the-ascott.com）","tone":"ok"}]}],"schedule":[{"time":"07:30","title":"离开仙本那 / Depart Semporna","note":"约 1.5 小时到斗湖机场。"},{"time":"11:00-13:50","title":"斗湖→吉隆坡 / TWU→KLIA","note":"马航。"},{"time":"14:00-19:00","title":"吉隆坡中转 / KLIA Layover","note":"重新托运 + 午餐 + 休息。"},{"time":"19:30-20:35","title":"吉隆坡→槟城 / KLIA→PEN","note":"马航。"},{"time":"21:15","title":"入住酒店 / Check in","note":"就近简单晚餐。"}],"food":[{"name":"吉隆坡机场午餐","note":"KLIA 中转 5.5h 在航站楼内解决；到槟城较晚，酒店附近简餐"}],"outfit":"舒适宽松（飞机+转机）+ 薄外套 + 平底鞋；槟城 20:35 到，夜里略凉"},{"id":"D10","date":"10月3日 · 周六","title":"乔治城经典步行线 · 蓝屋→姓氏桥","theme":"文化日","color":"#72BF94","summary":"按经典步行线逛乔治城：蓝屋→爱情巷→圣乔治教堂→市政厅→康华利斯堡→旧关仔角钟楼→土生华人博物馆→小印度→榴莲天下→姓林桥→姓氏桥→姓陈桥；傍晚去巴都丁宜入住宾乐雅。","distanceKm":12,"travelTime":"全程步行约 5-6 公里 + 巴都丁宜车程约 35 分钟","stay":"槟城宾乐雅 PARKROYAL Penang","napPlan":"中午博物馆后按体力小憩","risk":"蓝屋需预约参观；博物馆 17:30 前到；下午热，注意补水防晒；姓氏桥栈道免费","stops":[{"name":"蓝屋（张弼士故居）","en":"Blue Mansion (Cheong Fatt Tze)","lat":5.4211,"lng":100.3357,"emoji":"🏠","highlight":true,"note":"南洋蓝屋大宅；已预订 11:00 导览（¥168/4人，约 ¥42/人）。"},{"name":"爱情巷","en":"Love Lane","lat":5.4179,"lng":100.3338,"emoji":"💕","highlight":true,"note":"文艺小巷，涂鸦、咖啡店、精品店。"},{"name":"圣乔治教堂","en":"St. George's Church","lat":5.4196,"lng":100.3409,"emoji":"⛪","highlight":true,"note":"东南亚最古老的圣公会教堂之一。"},{"name":"槟城市政厅","en":"Penang City Hall","lat":5.4208,"lng":100.3434,"emoji":"🏛️","highlight":true,"note":"英殖民风格白色建筑，滨海大道边。"},{"name":"康华利斯堡","en":"Fort Cornwallis","lat":5.4207,"lng":100.3445,"emoji":"🏰","highlight":true,"note":"槟城最古老城堡，城墙+大炮，可上墙看海。"},{"name":"旧关仔角钟楼","en":"Jubilee Clock Tower","lat":5.4205,"lng":100.3443,"emoji":"🕰️","highlight":true,"note":"纪念英女王登基的钟楼，海边打卡点。"},{"name":"槟城土生华人博物馆","en":"Pinang Peranakan Mansion","lat":5.4178,"lng":100.3411,"emoji":"🏛️","highlight":true,"note":"百年侨生大宅，娘惹文化必看。"},{"name":"小印度","en":"Little India","lat":5.4167,"lng":100.3366,"emoji":"🪔","highlight":true,"note":"印度风情街区，香料、纱丽、餐厅，午餐可在此解决。"},{"name":"榴莲天下","en":"Durian Stop","lat":5.4165,"lng":100.3355,"emoji":"🍈","highlight":true,"note":"吃榴莲（D24/猫山王按季供应）；具体位置以当天导航为准。"},{"name":"姓林桥","en":"Lim Jetty","lat":5.4111,"lng":100.3372,"emoji":"🛶","highlight":true,"note":"姓氏桥之一，海边栈道与水上民居。"},{"name":"姓氏桥（周桥）","en":"Chew Jetty (Clan Jetty)","lat":5.4107,"lng":100.3382,"emoji":"🌊","highlight":true,"note":"最有名的姓氏桥，栈道+咖啡店，出片点。"},{"name":"姓陈桥","en":"Tan Jetty","lat":5.4115,"lng":100.3362,"emoji":"🛶","highlight":true,"note":"另一姓氏桥，比周桥安静。"},{"name":"槟城宾乐雅度假酒店","en":"PARKROYAL Penang Resort","lat":5.4724,"lng":100.2463,"emoji":"🏖️","highlight":true,"note":"已预订 2 晚（10.3-10.5，离店扣费）；位于巴都丁宜海滩，豪华海景大床房。","noteLines":[{"text":"已预订 2 晚（10.3-10.5，离店扣费）","tone":"info"},{"text":"🛏️ 豪华海景大床房：1.81m 大床（按 3 人预订）","tone":"info"},{"text":"✅ 入住人数与加床确认邮件已发送·待回复（reserve.prpen@parkroyalhotels.com）","tone":"ok"}]}],"schedule":[{"time":"11:00-12:00","title":"蓝屋导览（已订）/ Blue Mansion Tour","note":"¥168/4人（约 ¥42/人）；可先逛爱情巷再过来"},{"time":"10:00-10:30","title":"爱情巷 / Love Lane","note":"逛拍"},{"time":"10:30-11:00","title":"圣乔治教堂 / St. George's","note":""},{"time":"11:00-11:30","title":"市政厅 / City Hall","note":""},{"time":"11:30-12:15","title":"康华利斯堡 / Fort Cornwallis","note":""},{"time":"12:15-12:30","title":"旧关仔角钟楼 / Clock Tower","note":""},{"time":"12:30-13:30","title":"土生华人博物馆 / Peranakan Mansion","note":""},{"time":"13:30-14:15","title":"小印度（午餐） / Little India","note":"印度菜/小吃"},{"time":"14:15-14:45","title":"榴莲天下 / Durian","note":"吃榴莲"},{"time":"15:00-16:30","title":"姓氏桥（林桥/周桥/陈桥） / Clan Jetties","note":"海边栈道+拍照"},{"time":"16:30","title":"前往巴都丁宜 / To Batu Ferringhi","note":"Grab 约 35 分钟"},{"time":"19:00","title":"入住宾乐雅 + 晚餐 / Check-in & Dinner","note":"巴都丁宜夜市或酒店"}],"food":[{"name":"多春茶室（早餐）","en":"Toh Soon Cafe","note":"炭烤咖椰吐司 + 半熟蛋 + 白咖啡，经典南洋早餐"},{"name":"小印度（午餐可选）","en":"Little India","note":"印度小吃、香蕉叶饭、拉茶，逛吃一体"},{"name":"榴莲天下","en":"Durian Stop","note":"现开榴莲（D24/猫山王按季），位置以当天导航为准"},{"name":"青屋虾面","en":"Green House Hokkien Mee","note":"133A Jalan Burma，福建虾面专门店，虾头熬汤橙红、配猪油渣，槟城必吃"},{"name":"汕头街夜市（晚餐）","en":"Kimberley Street","note":"炒粿条、福建虾面、鸭粥粿汁、煎蕊；也可选娘惹菜配博物馆"}],"outfit":"轻便夏装/连衣裙 + 舒适步行鞋（一整天走路）+ 防晒帽墨镜，随身带水"},{"id":"D11","date":"10月4日 · 周日","title":"巴都丁宜海滩休闲日","theme":"寺院与海边","color":"#4A3FA8","summary":"上午睡到自然醒（酒店泳池/海边散步），下午巴都丁宜海滩玩水躺平，傍晚 Bora Bora 海边晚餐 + 火舞秀。","distanceKm":38,"travelTime":"约 40 分钟车程","stay":"槟城宾乐雅 PARKROYAL Penang","napPlan":"下午海滩自由休息","risk":"天气差时海滩改酒店泳池/SPA；防晒勤补，紫外线强","stops":[{"name":"巴都丁宜海滩","en":"Batu Ferringhi Beach","lat":5.4752,"lng":100.2498,"emoji":"🌊","highlight":true,"distanceFromPreviousKm":20,"travelFromPrevious":"🚗 约 40 分钟","note":"下午沙滩玩水、躺平；晚上有海边夜市（约 19:00 后）。"},{"name":"Bora Bora @ Ferringhi 西餐厅","en":"Bora Bora @ Ferringhi","lat":5.473,"lng":100.2475,"emoji":"🍽️","highlight":true,"distanceFromPreviousKm":1,"travelFromPrevious":"🚶 步行约 5-10 分钟","note":"巴都丁宜海滩海边西餐厅（宾乐雅旁），面朝大海看日落吃晚餐；约 20:30 沙滩火舞/烟花秀（以当天为准）。沙滩座位低消约 RM50/人，建议提前邮件/电话订位，日落前到也可现场等位。","noteLines":[{"text":"📅 提前半个月预定 · 订 18:00/18:30 的位置（日落前到店）","tone":"warn"},{"text":"🌅 日落前到可 walk in，最佳观景位建议提前订","tone":"info"},{"text":"💺 沙滩座位低消约 RM50/人","tone":"warn"},{"text":"🔥 火舞/烟花秀约 20:30 开始（以当天为准）","tone":"warn"}]}],"schedule":[{"time":"上午","title":"睡到自然醒 / Slow Morning","note":"酒店泳池或海边散步"},{"time":"12:30","title":"午餐 / Lunch","note":"酒店或巴都丁宜周边"},{"time":"14:00-18:00","title":"巴都丁宜海滩 / Batu Ferringhi","note":"玩水躺平看日落"},{"time":"19:00","title":"Bora Bora 海边晚餐 / Dinner","note":"低消 RM50/人，面朝大海；也可就近夜市"},{"time":"20:30","title":"火舞/烟花秀 / Fire Show","note":"Bora Bora 沙滩现场，约 20:30 开始（依当天情况）"}],"food":[{"name":"Bora Bora @ Ferringhi 西餐厅","note":"巴都丁宜海边西餐厅，晚餐 + 约 20:30 火舞/烟花秀；建议提前订位，沙滩座低消约 RM50/人"},{"name":"巴都丁宜夜市（备选）","note":"海边海鲜烧烤、小吃，约 19:00 开档"},{"name":"酒店餐饮","note":"午餐或不想外出时就近解决"}],"outfit":"泳衣 + 沙滩装 + 人字拖 + 防晒，海边怎么舒服怎么玩"},{"id":"D12","date":"10月5日 · 周一","title":"槟城 → 上海 · 返程","theme":"返程日","color":"#3F8A5F","summary":"上午海边散步早餐，退房后去机场，经香港转机回上海，22:10 落地浦东。","distanceKm":3772,"travelTime":"约 9 小时（两程飞行）","stay":"返程","napPlan":"机上休息","risk":"13:00 起飞，建议 11:00 前到机场；香港转机行李直达、无需重新托运（以登机牌为准）","stops":[{"name":"槟城宾乐雅度假酒店","en":"PARKROYAL Penang Resort","lat":5.4724,"lng":100.2463,"distanceFromPreviousKm":0,"note":"上午海边散步，12:00 前退房。"},{"name":"槟城国际机场","en":"Penang Intl Airport (PEN)","lat":5.2967,"lng":100.2748,"distanceFromPreviousKm":30,"travelFromPrevious":"🚗 约 40 分钟","note":"13:00 国泰飞香港。","noteLines":[{"text":"13:00 国泰飞香港，建议 11:00 前到机场","tone":"info"}],"stamp":"离境马来西亚 · 盖离境章，核对日期"},{"name":"香港国际机场","en":"Hong Kong Intl Airport (HKG)","lat":22.3126,"lng":113.9173,"distanceFromPreviousKm":2500,"travelFromPrevious":"✈️ 13:00-17:10","note":"中转 2 小时，行李直达。"},{"name":"上海浦东国际机场","en":"Shanghai Pudong Intl Airport (PVG)","lat":31.1427,"lng":121.8041,"emoji":"🏠","highlight":true,"distanceFromPreviousKm":1240,"travelFromPrevious":"✈️ 19:20-22:10","note":"22:10 落地，行程结束。"}],"schedule":[{"time":"09:00-11:00","title":"海边早餐 / Beach Morning","note":"退房前休闲。"},{"time":"11:00","title":"出发机场 / To Airport","note":"Grab 约 40 分钟。"},{"time":"13:00-17:10","title":"槟城→香港 / PEN→HKG","note":"国泰。"},{"time":"19:20-22:10","title":"香港→上海 / HKG→PVG","note":"国泰，落地浦东。"}],"food":[{"name":"海边早餐","note":"退房前酒店/海边简单吃，机场简餐"}],"outfit":"舒适休闲 + 薄外套（飞机）+ 平底鞋；香港转机室内冷气足"}],"sources":[{"label":"马来西亚航空（9.24/9.25/10.2/10.2 机票）","url":"https://www.malaysiaairlines.com"},{"label":"亚洲航空（9.30 亚庇→斗湖）","url":"https://www.airasia.com"},{"label":"国泰航空（10.5 返程）","url":"https://www.cathaypacific.com"},{"label":"沙巴旅游局 Sabah Tourism","url":"https://www.sabahtourism.com"},{"label":"槟城旅游局","url":"https://www.mypenang.gov.my"}],"budget":{"perPersonTotal":12959,"confirmedPerPerson":8485,"note":"已确认金额来自你们的预算表与最新机票报价；当地交通、一日游、餐饮为预估值，实际以现场支付为准。10.2 可改早班机、10.5 可选春秋直飞（差价约 ¥500/人）为可选项。 另：凯悦已确认 4 人需订 2 间房，如需第 2 间房预计约 +¥3,900（¥975/人，3 晚），待确认后计入总预算。 各酒店押金为可退现金（非费用）：雪邦 RM100 + 凯悦约 RM300 + 香格里拉待确认，建议备 RM700-1000 现金（约 ¥1200-1600）。","sections":[{"title":"✈️ 机票（4 程）","perPerson":4639,"items":[{"label":"9.24-9.25 上海→吉隆坡→亚庇（马航）","per":1411,"note":"4人共 ¥5,643","status":"已订"},{"label":"9.30 亚庇→斗湖（亚航）","per":303,"status":"已订"},{"label":"10.2 斗湖→吉隆坡→槟城（马航）","per":1085,"note":"吉隆坡中转需重新托运","status":"已订"},{"label":"10.5 槟城→香港→上海（国泰）","per":1840,"note":"行李直达","status":"已订"}]},{"title":"🏨 酒店（11 晚）· 已确认","perPerson":3845,"items":[{"label":"9.24 雪邦机场假日酒店 1晚","per":199,"note":"¥795.39","status":"已订"},{"label":"9.25-9.28 凯悦尚萃 3晚","per":985,"note":"¥3,941.79","status":"已订"},{"label":"9.28-9.30 香格里拉丹绒亚路 2晚","per":1022,"note":"¥4,087.28","status":"已订"},{"label":"9.30-10.2 憨豆假日民宿 2晚","per":650,"note":"¥2,600（已付款）","status":"已订"},{"label":"10.2-10.3 柏淡馨乐庭 1晚","per":272,"note":"¥1,088.57","status":"已订"},{"label":"10.3-10.5 槟城宾乐雅 2晚","per":717,"note":"¥2,869.57","status":"已订"}]},{"title":"🚗 当地交通（预估）","perPerson":340,"items":[{"label":"亚庇机场往返市区 Grab","per":60,"status":"无需预订"},{"label":"亚庇市内打车（3 天）","per":80,"status":"无需预订"},{"label":"斗湖机场↔仙本那（2 次，约 RM100-150/车）","per":80,"status":"无需预订"},{"label":"槟城机场往返 + 市内打车（2.5 天）","per":120,"status":"无需预订"}]},{"title":"🏝️ 一日游 / 活动 / 门票（预估）","perPerson":1735,"items":[{"label":"9.26 环滩岛一日游（船+2次浮潜+午餐）","per":240,"status":"待订（码头9号窗）"},{"label":"9.27 Kawa 红树林一日游","per":130,"status":"待订（码头窗口）"},{"label":"9.28 落日桨板（Marine Star，RM140/人）","per":230,"status":"到店订"},{"label":"10.1 马达京游艇一日游（懒猫·邦邦+汀巴汀巴+马达京）","per":845,"status":"待订"},{"label":"槟城：娘惹博物馆","per":40,"status":"现场购票"},{"label":"D2 LaraSpa 精油按摩（90 分钟）","per":208,"status":"待约（提前一周）"},{"label":"D10 蓝屋导览（11:00）","per":42,"status":"已订"}]},{"title":"🍜 餐饮（12 天 · 预估）","perPerson":2400,"sub":"按每人每天 ¥150-250 估算，丰俭由人","items":[]}]},"prep":{"visa":[{"title":"免签入境（无需办签证）","detail":"中马普通护照互免签证持续至 2026 年底，中国公民可免签停留不超过 30 天（每 180 天累计不超过 90 天），9.24-10.5 完全覆盖；停留期自入境当日起算。"},{"title":"必填 MDAC 电子入境卡","detail":"抵马前 3 天内（建议提前 1-2 天）在马移民局官网 imigresen-online.imi.gov.my/mdac/main 如实填写，4 人各自填写一份，提交后截图或打印随身携带备查。"},{"title":"护照要求","detail":"有效期须不少于 6 个月（9 月出发需护照有效期 ≥ 2027 年 3 月），完整无破损，建议留 2 页以上空白盖章页。"},{"title":"西马/东马都要盖入境章 ⭐","detail":"9.24 在吉隆坡入境盖西马章；9.25 飞东马沙巴（亚庇）时，需在机场移民柜台盖东马入境章；10.2 从斗湖离境东马时盖东马出境章；10.5 槟城出境盖离境章。每步都核对盖章日期，发现漏盖立即找移民官员补盖，避免离境受阻。"},{"title":"返程香港中转","detail":"10.5 经香港中转约 2 小时、行李直达、不入境香港，无需港澳通行证；若中途想出机场则需港澳通行证 + 签注。"},{"title":"备查材料","detail":"往返机票行程单、全部酒店预订单（电子/打印）、现金或信用卡；免签抽查概率低，但移民官可能问询行程，建议把攻略页存在手机里。"}],"packing":[{"item":"护照","detail":"有效期≥6个月+2页空白，复印/拍照备份"},{"item":"MDAC 截图/打印","detail":"入境卡二维码，4人各自携带"},{"item":"机票/酒店订单","detail":"电子版存手机，必要时打印"},{"item":"现金+银行卡","detail":"少量人民币/马币现金、Visa/Mastercard、支付宝；另备酒店押金现金（雪邦 RM100 + 凯悦约 RM300 + 香格里拉待确认，建议 RM700-1000）"},{"item":"英标转换插头","detail":"马来西亚 G 型三脚扁插"},{"item":"马来西亚 eSIM / 电话卡","detail":"提前买好 eSIM，或落地买 Celcom/Digi 卡"},{"item":"充电宝","detail":"≤20000mAh，上机随身"},{"item":"防晒用品","detail":"SPF50+（选 reef-safe）、墨镜、遮阳帽、防晒衣"},{"item":"水母衣/防晒服","detail":"浮潜防刮防晒"},{"item":"泳衣×2","detail":"跳岛+酒店泳池"},{"item":"运动鞋","detail":"波黑杜朗徒步必穿，拖鞋不行"},{"item":"人字拖/沙滩鞋","detail":"海滩与船上穿"},{"item":"薄外套","detail":"飞机/商场/夜间空调"},{"item":"晕船药","detail":"跳岛、红树林、敦沙卡兰提前吃"},{"item":"肠胃药/感冒药","detail":"海鲜与水土不服"},{"item":"防蚊液","detail":"红树林、仙本那蚊虫多"},{"item":"防水手机袋","detail":"出海必备"},{"item":"防水包/密封袋","detail":"放衣物与证件"},{"item":"旅行保险","detail":"建议含航班延误/医疗，出险留好单据"}],"tips":[{"title":"天气","detail":"9-10 月为雨季末段，亚庇/仙本那多午后阵雨，行程留弹性、备轻便雨衣"},{"title":"防晒","detail":"赤道紫外线极强，出海随时补涂，物理防晒更有效"},{"title":"插座","detail":"英标 G 型三脚插头，国内两脚插头用不了，务必带转换头"},{"title":"货币","detail":"林吉特 RM；小额现金 + 刷卡 + 支付宝组合最稳妥"},{"title":"打车","detail":"用 Grab（当地版滴滴），亚庇/槟城/机场都方便；仙本那憨豆有免费接送"},{"title":"电话卡","detail":"提前买好马来西亚 eSIM，或落地买 Celcom/Digi 卡"},{"title":"时差","detail":"马来西亚与国内无时差"},{"title":"饮水","detail":"自来水不建议直饮，买瓶装水"},{"title":"廉航行李","detail":"9.30 亚航为廉航，提前确认行李额度，现场超重购买很贵"},{"title":"宗教礼仪","detail":"进清真寺需长裤/长裙+头巾，公共场合举止得体"},{"title":"环保","detail":"浮潜不踩珊瑚、不碰海洋生物，用 reef-safe 防晒霜"},{"title":"安全","detail":"贵重物品随身，出海穿救生衣，夜间结伴出行"}]},"alerts":[{"title":"西马 / 东马都要盖入境章","detail":"9.24 吉隆坡盖西马章 → 9.25 亚庇盖东马入境章 → 10.2 斗湖盖东马出境章 → 10.5 槟城盖离境章；每一步都核对章日期，发现漏盖立即找移民官补盖。入境前 3 天内填好 MDAC。"},{"title":"9.24-9.25 跨天中转：行李需在吉隆坡提取并重新托运","detail":"上海→亚庇为跨天过夜中转（9.24 21:00 到吉隆坡、9.25 08:05 飞），托运行李不会直达亚庇：9.24 入境后提取行李→过海关→酒店班车；9.25 早上在 KLIA 马航柜台重新托运。值机时向地勤确认行李目的地；托运行李内勿放次日必用物品（睡衣/洗漱放随身）。"}]};
+    const esc = (value = "") => String(value).replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[char]);
+    const formatKm = (value) => Number.isFinite(value) ? `${Math.round(value).toLocaleString()} km` : "—";
+    const mapsUrl = (stop) => `https://www.google.com/maps/search/?api=1&query=${stop.lat},${stop.lng}`;
+    const map = L.map("map", { zoomControl: false, preferCanvas: true, minZoom: 2 });
+    L.control.zoom({ position: "bottomleft" }).addTo(map);
+    L.tileLayer("https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}", {
+      subdomains: ["1", "2", "3", "4"],
+      maxZoom: 18,
+      attribution: '&copy; 高德地图 AutoNavi'
+    }).addTo(map);
+
+    const routeLayer = L.layerGroup().addTo(map);
+    const markerLayer = L.layerGroup().addTo(map);
+    const labelLayer = L.layerGroup().addTo(map);
+    let currentBounds;
+
+    function normalIcon(number, color) {
+      return L.divIcon({
+        className: "",
+        html: `<div class="route-pin" style="background:${color}"><span>${number}</span></div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 30],
+        popupAnchor: [0, -27]
+      });
+    }
+
+    function highlightIcon(stop, number, color) {
+      const ticket = stop.bookable ? '<i class="ticket">🎟️</i>' : "";
+      return L.divIcon({
+        className: "",
+        html: `<div class="emoji-pin" style="--marker:${color}">${esc(stop.emoji || "✨")}<b class="order">${number}</b>${ticket}</div>`,
+        iconSize: [38, 38],
+        iconAnchor: [19, 30],
+        popupAnchor: [0, -28]
+      });
+    }
+
+    function popupHtml(stop, label) {
+      const booking = stop.bookable
+        ? `<div class="popup-booking">🎟️ ${esc(stop.bookingNote || "需提前预订或确认")}</div>`
+        : "";
+      return `<div class="popup-day">${esc(label)}</div>
+        <div class="popup-name">${esc(stop.name)}</div>
+        <div class="popup-en">${esc(stop.en)}</div>
+        ${stop.note ? `<div class="popup-note">${esc(stop.note)}</div>` : ""}
+        ${booking}
+        ${stop.stamp ? `<div class="popup-stamp">🛂 ${esc(stop.stamp)}</div>` : ""}
+        <a class="popup-link" href="${mapsUrl(stop)}" target="_blank" rel="noreferrer">Google Maps ↗</a>`;
+    }
+
+    function clearMap() {
+      routeLayer.clearLayers();
+      markerLayer.clearLayers();
+      labelLayer.clearLayers();
+    }
+
+    function pointsFor(day) {
+      return Array.isArray(day.geometry) && day.geometry.length > 1
+        ? day.geometry
+        : day.stops.map((stop) => [stop.lat, stop.lng]);
+    }
+
+    function drawDay(day, overview = false) {
+      const points = pointsFor(day);
+      if (points.length > 1) {
+        L.polyline(points, {
+          color: day.color,
+          weight: overview ? 4 : 6,
+          opacity: overview ? .72 : .92
+        }).addTo(routeLayer);
+      }
+      if (overview && points.length) {
+        const point = points[Math.floor(points.length / 2)];
+        L.marker(point, {
+          interactive: false,
+          icon: L.divIcon({
+            className: "",
+            html: `<div class="day-label" style="background:${day.color}">${esc(day.id)}</div>`,
+            iconSize: [1, 1]
+          })
+        }).addTo(labelLayer);
+      }
+    }
+
+    function addStop(stop, number, color, label) {
+      const icon = stop.highlight || stop.emoji || stop.bookable
+        ? highlightIcon(stop, number, color)
+        : normalIcon(number, color);
+      return L.marker([stop.lat, stop.lng], { icon, riseOnHover: true })
+        .addTo(markerLayer)
+        .bindPopup(popupHtml(stop, label));
+    }
+
+    function setActive(id) {
+      document.querySelectorAll(".day-button").forEach((button) => {
+        button.classList.toggle("active", button.dataset.day === id);
+      });
+    }
+
+    function fit(bounds, maxZoom = 11) {
+      if (!bounds.length) return;
+      currentBounds = L.latLngBounds(bounds);
+      map.fitBounds(currentBounds, { padding: [48, 48], maxZoom });
+    }
+
+    function showOverview() {
+      clearMap();
+      setActive("overview");
+      const bounds = [];
+      const seen = new Set();
+      trip.days.forEach((day) => {
+        drawDay(day, true);
+        day.stops.forEach((stop, index) => {
+          bounds.push([stop.lat, stop.lng]);
+          const key = `${stop.lat}:${stop.lng}:${stop.name}`;
+          if (!seen.has(key)) {
+            addStop(stop, index + 1, day.color, `${day.id} · ${day.date}`);
+            seen.add(key);
+          }
+        });
+      });
+      fit(bounds, 8);
+      renderOverview();
+    }
+
+    function showDay(id) {
+      const day = trip.days.find((item) => item.id === id);
+      if (!day) return;
+      clearMap();
+      setActive(id);
+      drawDay(day);
+      const bounds = [];
+      day.stops.forEach((stop, index) => {
+        bounds.push([stop.lat, stop.lng]);
+        addStop(stop, index + 1, day.color, `${day.id} · 第 ${index + 1} 站`);
+      });
+      fit(bounds, 12);
+      renderDay(day);
+    }
+
+    function renderOverview() {
+      document.getElementById("detail").innerHTML = `
+        <div class="heading">
+          <div><p class="eyebrow">Overview</p><h3>${esc(trip.days.length)} 天完整路线</h3></div>
+          <div class="day-code" style="background:var(--green)">ALL</div>
+        </div>
+        <p class="summary">按日期查看每日地点、行驶强度、休息安排和预订提醒。地图上的 🎟️ 表示需提前预订或确认。</p>
+        <div class="metric-grid">
+          <div class="metric"><span>总距离</span><strong>${formatKm(trip.totalDistanceKm)}</strong></div>
+          <div class="metric"><span>旅行强度</span><strong>${esc(trip.pace)}</strong></div>
+          <div class="metric"><span>抵达</span><strong>${esc(trip.arrival || "—")}</strong></div>
+          <div class="metric"><span>离开</span><strong>${esc(trip.departure || "—")}</strong></div>
+        </div>
+        ${trip.budget ? `<div class="risk" style="margin-top:12px"><strong>💰 人均预算（预估）：</strong>≈ ¥${esc(Number(trip.budget.perPersonTotal).toLocaleString())} · 已确认 ¥${esc(Number(trip.budget.confirmedPerPerson).toLocaleString())}（机票+酒店）</div>` : ""}
+        ${trip.prep ? `<div class="risk" style="margin-top:12px"><strong>🛂 行前准备：</strong>马来西亚免签（需填 MDAC）· 西马/东马入境都要盖章 · 必备物品与小贴士详见攻略页</div>` : ""}
+        ${trip.alerts?.length ? `<div class="risk" style="margin-top:12px;border-color:#E8C87E;color:#7A5610;background:#FFF8E8"><strong>⚠️ 重点关注 ${esc(trip.alerts.length)} 项：</strong>${trip.alerts.slice(0, 3).map((a) => esc(a.title)).join(" · ")} 等，详见攻略页</div>` : ""}
+        <p class="section-label">每日路线</p>
+        <div class="timeline">${trip.days.map((day) => `
+          <div class="stop" data-day-open="${esc(day.id)}">
+            <span class="stop-num" style="background:${day.color}">${esc(day.id)}</span>
+            <span class="stop-name"><strong>${esc(day.date)} · ${esc(day.title)}</strong><span>${esc(day.travelTime || "")}</span></span>
+            <span class="stop-flags">${day.stops.some((stop) => stop.bookable) ? "🎟️" : ""}</span>
+          </div>`).join("")}</div>`;
+      document.querySelectorAll("[data-day-open]").forEach((node) => node.addEventListener("click", () => showDay(node.dataset.dayOpen)));
+    }
+
+    function renderDay(day) {
+      const bookings = day.stops.filter((stop) => stop.bookable);
+      document.getElementById("detail").innerHTML = `
+        <div class="heading">
+          <div><p class="eyebrow">${esc(day.date)} · ${esc(day.theme || "")}</p><h3>${esc(day.title)}</h3></div>
+          <div class="day-code" style="background:${day.color}">${esc(day.id)}</div>
+        </div>
+        <p class="summary">${esc(day.summary)}</p>
+        <div class="metric-grid">
+          <div class="metric"><span>当天距离</span><strong>${formatKm(day.distanceKm)}</strong></div>
+          <div class="metric"><span>交通时间</span><strong>${esc(day.travelTime || "—")}</strong></div>
+          <div class="metric"><span>固定休息</span><strong>${esc(day.napPlan || "按体力安排")}</strong></div>
+          <div class="metric"><span>住宿</span><strong>${esc(day.stay || "—")}</strong></div>
+        </div>
+        ${bookings.length ? `<div class="booking"><strong>🎟️ 提前预订：</strong>${bookings.map((stop) => esc(stop.name)).join(" · ")}</div>` : ""}
+        <p class="section-label">地点与顺序</p>
+        <div class="timeline">${day.stops.map((stop, index) => `
+          <div class="stop" data-stop="${index}">
+            <span class="stop-num" style="background:${day.color}">${index + 1}</span>
+            <span class="stop-name"><strong>${esc(stop.name)}</strong><span>${esc(stop.en)}${stop.travelFromPrevious ? ` · ${esc(stop.travelFromPrevious)}` : ""}</span></span>
+            <span class="stop-flags">${stop.stamp ? "🛂" : ""} ${stop.optional ? "可删" : ""} ${stop.bookable ? "🎟️" : (stop.emoji || "")}</span>
+          </div>`).join("")}</div>
+        ${day.risk ? `<div class="risk"><strong>调整与兜底：</strong>${esc(day.risk)}</div>` : ""}`;
+      document.querySelectorAll("[data-stop]").forEach((node) => {
+        node.addEventListener("click", () => {
+          const stop = day.stops[Number(node.dataset.stop)];
+          map.flyTo([stop.lat, stop.lng], 14, { duration: .65 });
+        });
+      });
+    }
+
+    document.getElementById("topTitle").textContent = trip.title;
+    document.getElementById("topSubtitle").textContent = trip.subtitle || trip.travelWindow;
+    document.getElementById("heroTitle").textContent = trip.title;
+    document.getElementById("heroCopy").textContent = `${trip.travelWindow} · ${trip.travelers}`;
+    document.getElementById("facts").innerHTML = `
+      <div class="fact"><span>旅行强度</span><strong>${esc(trip.pace)}</strong></div>
+      <div class="fact"><span>固定时间</span><strong>${esc((trip.fixedWindows || []).join(" · ") || "—")}</strong></div>`;
+    document.getElementById("dayNav").innerHTML =
+      `<button class="day-button active" type="button" data-day="overview">总览</button>` +
+      trip.days.map((day) => `<button class="day-button" type="button" data-day="${esc(day.id)}">${esc(day.id)}</button>`).join("");
+    document.querySelectorAll(".day-button").forEach((button) => {
+      button.addEventListener("click", () => button.dataset.day === "overview" ? showOverview() : showDay(button.dataset.day));
+    });
+    document.getElementById("overviewButton").addEventListener("click", showOverview);
+    document.getElementById("fitButton").addEventListener("click", () => {
+      if (currentBounds) map.fitBounds(currentBounds, { padding: [48, 48], maxZoom: 11 });
+    });
+    showOverview();
+    setTimeout(() => map.invalidateSize(), 120);
+    window.addEventListener("resize", () => map.invalidateSize());
+  </script>
+</body>
+</html>
